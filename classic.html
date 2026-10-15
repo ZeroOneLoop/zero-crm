@@ -2496,6 +2496,11 @@
   body.pdf-only .view-tabs, body.pdf-only #boardSwitcher, body.pdf-only #addTaskBtn, body.pdf-only .search-wrap,
   body.pdf-only #priorityFilter, body.pdf-only #tagFilter, body.pdf-only #assigneeFilter, body.pdf-only .stats-wrap,
   body.pdf-only .notif-wrap, body.pdf-only #exportBtn, body.pdf-only #importBtn { display: none !important; }
+  #panePdf { position: relative; }
+  #pdfToolsHome, #pdfToolWorkspace { position: relative; z-index: 1; }
+  .pdf-one-art { position: absolute; right: 2.5%; bottom: 0; height: min(78vh, 760px); width: auto; z-index: 0; pointer-events: none; filter: drop-shadow(0 18px 36px rgba(20, 30, 80, .25)); }
+  @media (max-width: 1560px) { .pdf-one-art { opacity: .18; } }
+  @media (max-width: 900px) { .pdf-one-art { display: none; } }
   body.pdf-only header .brand::after { content: "PDF Tools"; margin-left: 12px; padding-left: 12px; border-left: 1px solid #d0d4e4; font-weight: 700; font-size: 16px; color: #0b123c; align-self: center; }
 </style>
 </head>
@@ -2838,6 +2843,7 @@
     </div>
 
     <div class="view-pane pdf-pane" id="panePdf" style="display:none;">
+      <img src="one-art.webp" alt="" aria-hidden="true" class="pdf-one-art">
       <div class="pdf-pane-inner">
         <p class="pdf-tools-intro">Merge files into one PDF, convert a PDF's pages into JPGs, turn images into a PDF, or delete/reorder/rotate pages in an existing PDF. Everything runs right here in the app — your files never leave this device.</p>
         <div class="pdf-tool-tabs" id="pdfToolTabs"></div>
