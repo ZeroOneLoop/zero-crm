@@ -15183,7 +15183,7 @@
   }
   function ieSetsHTML() {
     var canEdit = zcPerm("ielts_manage_tests");
-    return '<div class="zc-sec"><h3>Test sets</h3><p class="zc-hint">Original Zero One test sets. Turn a set off to hide it from "Send a test". Need more sets or changes to questions? Ask Claude to write and add them.</p>' +
+    return '<div class="zc-sec"><h3>Test sets</h3><p class="zc-hint">Original Zero One test sets. Turn a set off to hide it from "Send a test". Need more sets or changes to questions? Ask your developer to write and add them.</p>' +
       IE.tests.map(function (t) {
         return '<div class="zc-staff-row"><div class="zc-staff-main"><b>' + escapeHtml(t.title) + '</b><div>' +
           escapeHtml(t.kind === "academic" ? "IELTS Academic" : "IELTS Life Skills A1") + ' · ' + ieCountQ(t) + ' items · ' + escapeHtml(t.description || "") + '</div></div>' +
@@ -15283,9 +15283,9 @@
 
     // Claude suggestion
     var canAI = zcPerm("use_ai");
-    html += '<div class="zc-sec"><h3>' + icon("sparkle", 15, "#06a985") + ' Claude\'s suggestion</h3>' +
-      (ai ? ieAIHTML(ai, academic) : '<p class="zc-hint">Claude reads the writing and the speaking transcripts and suggests bands with feedback. You decide the final result.</p>') +
-      (canAI ? '<button class="zc-sbtn primary" id="ieAskAI">' + (ai ? "Ask again" : "Ask Claude to suggest marks") + '</button>' +
+    html += '<div class="zc-sec"><h3>' + icon("sparkle", 15, "#06a985") + ' Zero\'s suggestion</h3>' +
+      (ai ? ieAIHTML(ai, academic) : '<p class="zc-hint">Zero reads the writing and the speaking transcripts and suggests bands with feedback. You decide the final result.</p>') +
+      (canAI ? '<button class="zc-sbtn primary" id="ieAskAI">' + (ai ? "Ask again" : "Ask Zero") + '</button>' +
         (ai ? ' <button class="zc-sbtn" id="ieUseAI">Use these marks</button>' : "") : '<p class="zc-hint">Your role can\'t use Claude.</p>') +
       '</div>';
 
@@ -15406,7 +15406,7 @@
       : 'This is a practice check for the IELTS Life Skills A1 (Speaking and Listening) test. Return ONLY JSON: {"criteria":{"listening":L,"personal":L,"topics":L,"situations":L,"pronunciation":L,"language":L},"feedback_for_student":"..."} where each L is one of "ready","nearly","not_yet". Judge at CEFR A1 level (simple phrases and sentences about familiar things). For pronunciation, judge only clarity from how well the speech recogniser captured the words, and say so in the feedback.';
     var prompt = "You are an experienced, fair IELTS examiner helping a trainer at Zero One Education mark a diagnostic practice assessment. Base your judgement on the official public IELTS band descriptors.\n\n" +
       spec + "\nThe feedback_for_student should be 3-5 short sentences: strengths, the two most important things to improve, and one practical tip. Plain English.\n\n" + parts.join("\n\n");
-    btn.disabled = true; btn.textContent = "Claude is reading…";
+    btn.disabled = true; btn.textContent = "Zero is reading…";
     fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": claudeApiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
@@ -15421,11 +15421,11 @@
         return ZC.sb.from("ielts_attempts").update({ ai_suggestion: json }).eq("id", a.id).select("id").then(function () {
           a.ai_suggestion = json;
           ieDrawMarking(wrap, inv, t, a);
-          showToast("✨ Claude's suggestion is ready");
+          showToast("✨ Zero's suggestion is ready");
         });
       }).catch(function (e) {
-        btn.disabled = false; btn.textContent = "Ask Claude to suggest marks";
-        showToast("Claude: " + (e.message || "something went wrong"));
+        btn.disabled = false; btn.textContent = "Ask Zero";
+        showToast("Zero AI: " + (e.message || "something went wrong"));
       });
   }
   function ieLoadAudio(wrap, inv) {
