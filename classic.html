@@ -2492,6 +2492,12 @@
   .ie-speak audio { width: 100%; max-width: 420px; height: 36px; }
   .ie-ai { background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; font-size: 13px; }
 </style>
+<style>
+  body.pdf-only .view-tabs, body.pdf-only #boardSwitcher, body.pdf-only #addTaskBtn, body.pdf-only .search-wrap,
+  body.pdf-only #priorityFilter, body.pdf-only #tagFilter, body.pdf-only #assigneeFilter, body.pdf-only .stats-wrap,
+  body.pdf-only .notif-wrap, body.pdf-only #exportBtn, body.pdf-only #importBtn { display: none !important; }
+  body.pdf-only header .brand::after { content: "PDF Tools"; margin-left: 12px; padding-left: 12px; border-left: 1px solid #d0d4e4; font-weight: 700; font-size: 16px; color: #0b123c; align-self: center; }
+</style>
 </head>
 <body data-theme="light">
 <div class="zc-gate" id="zcGate">
@@ -4185,7 +4191,7 @@
 
   // ---------- view switching ----------
   function switchView(view) {
-    if (!zcViewAllowed(view)) view = "board";
+    if (!zcViewAllowed(view)) view = zcViewAllowed("board") ? "board" : "pdf";
     currentView = view;
     document.querySelectorAll(".view-tab").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.view === view);
@@ -10375,6 +10381,11 @@
   function renderPdfToolsGrid() {
     var grid = document.getElementById("pdfToolsGrid");
     if (!grid) return;
+    if (ZC.me && !zcPerm("use_pdf_tools")) {
+      grid.innerHTML = '<div style="padding:40px;text-align:center;color:#676879;grid-column:1/-1">🔒 Your role doesn\'t include PDF tools. Ask the owner for access.</div>';
+      var tabsEl = document.getElementById("pdfToolTabs"); if (tabsEl) tabsEl.innerHTML = "";
+      return;
+    }
     grid.innerHTML = pdfVisibleTools().map(function (t) {
       return '<div class="pdf-tool-card" data-pdf-tool="' + t.key + '">' +
         '<div class="pdf-tool-card-icon" style="background:' + t.color + '">' + pdfIcon(t.iconKey, 20) + '</div>' +
@@ -10406,6 +10417,7 @@
   }
 
   function openPdfTool(key) {
+    if (ZC.me && !zcPerm("use_pdf_tools")) { showToast("Your role doesn't include PDF tools"); return; }
     if (!pdfToolAllowed(key)) { showToast("Your role doesn't include this PDF tool"); return; }
     pdfCurrentTool = key;
     document.getElementById("pdfToolsHome").style.display = "none";
@@ -14038,6 +14050,8 @@
     return zcPerm("create_own_tasks") && !!ZC.me && t._createdBy === ZC.me.id;
   }
   function zcViewAllowed(view) {
+    // staff (everyone except the owner) only get the PDF tools here
+    if (ZC.me && !isOwner()) return view === "pdf";
     if (["board", "pdf", "notes", "qr", "timebox", "chat"].indexOf(view) !== -1) return true;
     if (view === "team") return zcPerm("view_all_tasks");
     if (view === "ielts") return zcPerm("ielts_assess");
@@ -14482,8 +14496,11 @@
     var ck = document.querySelector(".claude-key-wrap");
     if (ck) ck.style.display = zcPerm("use_ai") ? "" : "none";
     if (pdfCurrentTool && !pdfToolAllowed(pdfCurrentTool)) closePdfTool();
+    var pdfOnly = !!ZC.me && !isOwner();
+    document.body.classList.toggle("pdf-only", pdfOnly);
     renderPdfToolsGrid();
-    if (!zcViewAllowed(currentView)) switchView("board");
+    if (pdfOnly && currentView !== "pdf") switchView("pdf");
+    else if (!zcViewAllowed(currentView)) switchView("board");
     if (isRevokedMember()) showAccessRevokedOverlay(); else hideAccessRevokedOverlay();
   };
 
