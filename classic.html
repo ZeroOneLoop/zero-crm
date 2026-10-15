@@ -10213,6 +10213,10 @@
     { key: "pdfToWord", iconKey: "pdfToWord", color: "#7c2d92", title: "PDF to Word", desc: "Pull the text out of a PDF into an editable .docx file, ready to reuse and edit." },
     { key: "cnicTranslation", iconKey: "translate", color: "#0e7490", title: "CNIC Translation", desc: "Generate a certified English translation page for a Pakistani CNIC — the layout and wording stay fixed, only the applicant's details change." }
   ];
+  // Staff see these tools; the rest need the "pdf_extra_tools" permission (owner always has it)
+  var PDF_STAFF_TOOLS = ["merge", "splitPdf", "compressPdf", "jpgToPdf", "pdfToJpg", "editPdf", "wordToPdf", "pdfToWord"];
+  function pdfToolAllowed(key) { return PDF_STAFF_TOOLS.indexOf(key) >= 0 || zcPerm("pdf_extra_tools"); }
+  function pdfVisibleTools() { return PDF_TOOL_DEFS.filter(function (t) { return pdfToolAllowed(t.key); }); }
   var PDF_LIB_SRC = {
     pdfLib: "https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js",
     pdfjs: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
@@ -10371,7 +10375,7 @@
   function renderPdfToolsGrid() {
     var grid = document.getElementById("pdfToolsGrid");
     if (!grid) return;
-    grid.innerHTML = PDF_TOOL_DEFS.map(function (t) {
+    grid.innerHTML = pdfVisibleTools().map(function (t) {
       return '<div class="pdf-tool-card" data-pdf-tool="' + t.key + '">' +
         '<div class="pdf-tool-card-icon" style="background:' + t.color + '">' + pdfIcon(t.iconKey, 20) + '</div>' +
         '<div class="pdf-tool-card-title">' + escapeHtml(t.title) + '</div>' +
@@ -10388,7 +10392,7 @@
     var wrap = document.getElementById("pdfToolTabs");
     if (!wrap) return;
     var html = '<button type="button" class="pdf-tool-tab pdf-tool-tab-home' + (!pdfCurrentTool ? " active" : "") + '" data-pdf-tab="home">' + pdfIcon("home", 14) + 'All Tools</button>';
-    html += PDF_TOOL_DEFS.map(function (t) {
+    html += pdfVisibleTools().map(function (t) {
       var active = pdfCurrentTool === t.key;
       return '<button type="button" class="pdf-tool-tab' + (active ? " active" : "") + '" data-pdf-tab="' + t.key + '">' + pdfIcon(t.iconKey, 14) + escapeHtml(t.title) + '</button>';
     }).join("");
@@ -10402,6 +10406,7 @@
   }
 
   function openPdfTool(key) {
+    if (!pdfToolAllowed(key)) { showToast("Your role doesn't include this PDF tool"); return; }
     pdfCurrentTool = key;
     document.getElementById("pdfToolsHome").style.display = "none";
     document.getElementById("pdfToolWorkspace").style.display = "flex";
@@ -13994,6 +13999,7 @@
     { label: "Tools & admin", perms: [
       ["use_ai", "Use Claude AI features", ""],
       ["use_pdf_tools", "Use PDF tools", ""],
+      ["pdf_extra_tools", "Extra PDF tools", "ID Card Combiner, Batch Merge, CNIC Translation"],
       ["export_data", "Export data", ""],
       ["delete_records", "Delete records", "Tasks, clients, fees"],
       ["view_activity", "See activity log", ""],
@@ -14020,6 +14026,8 @@
   function zcPerm(p) {
     if (!ZC.me || !ZC.me.active) return false;
     if (ZC.me.role_key === "owner") return true;
+    var ov = ZC.me.perm_overrides;
+    if (ov && Object.prototype.hasOwnProperty.call(ov, p)) return ov[p] === true;
     var r = ZC.roles[ZC.me.role_key];
     return !!(r && r.permissions && r.permissions[p] === true);
   }
@@ -14473,6 +14481,8 @@
     show("exportBtn", zcPerm("export_data"));
     var ck = document.querySelector(".claude-key-wrap");
     if (ck) ck.style.display = zcPerm("use_ai") ? "" : "none";
+    if (pdfCurrentTool && !pdfToolAllowed(pdfCurrentTool)) closePdfTool();
+    renderPdfToolsGrid();
     if (!zcViewAllowed(currentView)) switchView("board");
     if (isRevokedMember()) showAccessRevokedOverlay(); else hideAccessRevokedOverlay();
   };
